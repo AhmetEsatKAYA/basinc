@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Katı Basıncı Oyunu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .game-area {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .game-container {
+      position: relative;
+      width: 40%;
+      height: 400px;
+      border: 2px solid #333;
+      background-color: #e0e0e0;
+      overflow: hidden;
+    }
+    button {
+            width: fit-content;
+            padding: 18px;
+            font-size: 19px;
+            border: 1px solid black;
+            text-align: center;
+            text-decoration: none;
+            color: black;
+            background-color: white;
+            transition: 0.3s;
+            height: px;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            cursor: pointer;
+            border-radius: 20px;
+        }
+        
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+    .box {
+      width: 100px;
+      height: 50px;
+      background-color: #007bff;
+      position: absolute;
+      border: 1px solid #000;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: grab;
+    }
+    #controls {
+      margin: 20px 0;
+    }
+    #experiment-details {
+      margin: 20px 0;
+      font-size: 1.2em;
+    }
+    .pressure-display {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Katı Basıncı Oyunu</h1>
+<p>Her düzenekte kutuları ekleyin, sürükleyin ve basıncı gözlemleyin!</p>
+
+<div id="experiment-details">
+  <p><strong>Bağımsız Değişken:</strong> Yüzey Alanı</p>
+  <p><strong>Bağımlı Değişken:</strong> Basınç</p>
+  <p><strong>Kontrol Edilen Değişken:</strong> Kutuların ağırlığı</p>
+</div>
+
+<div class="game-area">
+  <div id="game-container-1" class="game-container"></div>
+  <div id="game-container-2" class="game-container"></div>
+</div>
+
+<div id="controls">
+  <button onclick="addBox('game-container-1')">1. Düzeneğe Kutu Ekle</button>
+  <button onclick="addBox('game-container-2')">2. Düzeneğe Kutu Ekle</button>
+  <br>
+  <br>
+  <button onclick="checkExperiment()">Kontrol Et</button>
+</div>
+
+<div class="pressure-display">
+  1. Düzenek Basıncı: <span id="pressure-1">0</span> Pa | 2. Düzenek Basıncı: <span id="pressure-2">0</span> Pa
+</div>
+
+<script>
+  const containers = {
+    'game-container-1': {
+      element: document.getElementById('game-container-1'),
+      boxes: [],
+      pressureDisplay: document.getElementById('pressure-1')
+    },
+    'game-container-2': {
+      element: document.getElementById('game-container-2'),
+      boxes: [],
+      pressureDisplay: document.getElementById('pressure-2')
+    }
+  };
+
+  const gravity = 1;
+  const boxWeight = 10;
+
+  function addBox(containerId) {
+    const container = containers[containerId];
+    if (isGameOver(container)) {
+      alert(`${containerId} düzenekte daha fazla kutu ekleyemezsiniz.`);
+      return;
+    }
+
+    const box = document.createElement("div");
+    box.className = "box";
+    box.style.bottom = `0px`;
+    box.style.left = `${Math.random() * (container.element.offsetWidth - 100)}px`;
+    box.textContent = `Kutu ${container.boxes.length + 1}`;
+    box.draggable = true;
+
+    box.addEventListener("dragstart", (e) => dragStart(e, containerId));
+    box.addEventListener("dragend", (e) => dragEnd(e, containerId));
+
+    container.element.appendChild(box);
+    container.boxes.push({ element: box, velocity: 0, isDragging: false });
+
+    updatePressure(container);
+  }
+
+  function isGameOver(container) {
+    return container.boxes.some(box => {
+      const bottom = parseFloat(box.element.style.bottom);
+      return bottom + box.element.offsetHeight >= container.element.offsetHeight;
+    });
+  }
+
+  function dragStart(e, containerId) {
+    const container = containers[containerId];
+    const box = getBoxByElement(e.target, container);
+    box.isDragging = true;
+    e.target.style.opacity = "0.5";
+  }
+
+  function dragEnd(e, containerId) {
+    const container = containers[containerId];
+    const box = getBoxByElement(e.target, container);
+    box.isDragging = false;
+    e.target.style.opacity = "1";
+
+    const rect = container.element.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    if (offsetX >= 0 && offsetX <= container.element.offsetWidth - e.target.offsetWidth &&
+        offsetY >= 0 && offsetY <= container.element.offsetHeight - e.target.offsetHeight) {
+      e.target.style.left = `${offsetX}px`;
+      e.target.style.bottom = `${container.element.offsetHeight - offsetY - e.target.offsetHeight}px`;
+    }
+
+    snapToGround(box, container);
+    updatePressure(container);
+  }
+
+  function snapToGround(box, container) {
+    let maxBottom = 0;
+    container.boxes.forEach(otherBox => {
+      if (otherBox !== box) {
+        const otherLeft = parseFloat(otherBox.element.style.left);
+        const otherRight = otherLeft + otherBox.element.offsetWidth;
+
+        const boxLeft = parseFloat(box.element.style.left);
+        const boxRight = boxLeft + box.element.offsetWidth;
+
+        if (boxRight > otherLeft && boxLeft < otherRight) {
+          const otherTop = parseFloat(otherBox.element.style.bottom) + otherBox.element.offsetHeight;
+          if (otherTop > maxBottom) maxBottom = otherTop;
+        }
+      }
+    });
+
+    box.element.style.bottom = `${maxBottom}px`;
+  }
+
+  function applyGravity(container) {
+    container.boxes.forEach(box => {
+      if (box.isDragging) return;
+
+      const currentBottom = parseFloat(box.element.style.bottom);
+      const velocity = box.velocity + gravity;
+      const nextBottom = currentBottom - velocity;
+
+      if (nextBottom < 0) {
+        box.element.style.bottom = "0px";
+        box.velocity = 0;
+      } else if (checkCollision(box, container)) {
+        box.velocity = 0;
+        snapToGround(box, container);
+      } else {
+        box.element.style.bottom = `${nextBottom}px`;
+        box.velocity = velocity;
+      }
+    });
+  }
+
+  function checkCollision(box, container) {
+    let collision = false;
+    container.boxes.forEach(otherBox => {
+      if (otherBox !== box) {
+        const otherBottom = parseFloat(otherBox.element.style.bottom);
+        const otherLeft = parseFloat(otherBox.element.style.left);
+        const otherRight = otherLeft + otherBox.element.offsetWidth;
+
+        const boxBottom = parseFloat(box.element.style.bottom);
+        const boxLeft = parseFloat(box.element.style.left);
+        const boxRight = boxLeft + box.element.offsetWidth;
+
+        if (
+          boxRight > otherLeft &&
+          boxLeft < otherRight &&
+          boxBottom <= otherBottom + otherBox.element.offsetHeight &&
+          boxBottom + box.element.offsetHeight >= otherBottom
+        ) {
+          collision = true;
+        }
+      }
+    });
+    return collision;
+  }
+
+  function getBoxByElement(element, container) {
+    return container.boxes.find(box => box.element === element);
+  }
+
+  function updatePressure(container) {
+    const groundContact = new Set();
+    container.boxes.forEach(box => {
+      const bottom = parseFloat(box.element.style.bottom);
+      if (bottom === 0) {
+        const left = parseFloat(box.element.style.left);
+        const width = box.element.offsetWidth;
+
+        for (let x = left; x < left + width; x++) {
+          groundContact.add(Math.floor(x));
+        }
+      }
+    });
+
+    const totalSurfaceArea = groundContact.size;
+    const totalWeight = container.boxes.length * boxWeight;
+
+    const pressure = totalSurfaceArea > 0 ? totalWeight / totalSurfaceArea : 0;
+    container.pressureDisplay.textContent = pressure.toFixed(2) * 100;
+  }
+
+  function checkExperiment() {
+  let correct = true;
+
+  Object.values(containers).forEach(container => {
+    const groundContact = new Set(); // Yere temas eden alanlar
+    let totalWeight = 0;
+
+    // Yere temas eden kutuları kontrol et ve say
+    const boxesOnGround = container.boxes.filter(box => parseFloat(box.element.style.bottom) === 0).length;
+     alert(boxesOnGround)
+    // Yere temas eden kutuların sayısı doğru mu kontrol et
+    if (boxesOnGround !== container.boxes.length) {
+      correct = false; // Yere temas etmeyen kutular var
+    }
+
+    // Yere temas eden kutular varsa basıncı hesapla
+    if (correct) {
+      container.boxes.forEach(box => {
+        const bottom = parseFloat(box.element.style.bottom);
+
+        // Yalnızca yere temas eden kutuları dikkate al
+        if (bottom === 0) {
+          const left = parseFloat(box.element.style.left);
+          const width = box.element.offsetWidth;
+
+          for (let x = left; x < left + width; x++) {
+            groundContact.add(Math.floor(x)); // Yere temas eden alanın genişliği
+          }
+
+          totalWeight += boxWeight; // Her kutunun ağırlığı sabit
+        }
+      });
+
+      // Yüzey alanı ve toplam ağırlığı kontrol et
+      const totalSurfaceArea = groundContact.size;
+      const expectedPressure = totalWeight / totalSurfaceArea;
+
+      // Hesaplanan basınç ve ekranda gösterilen basıncı karşılaştır
+      const displayedPressure = parseFloat(container.pressureDisplay.textContent);
+
+      if (Math.abs(expectedPressure - displayedPressure) > 0.1) {
+        correct = false; // Hesaplanan basınç yanlış
+      }
+    }
+
+    // Sonuçları göster
+    if (!correct) {
+      alert("Düzenek doğru şekilde kuruldu!");
+    } else {
+      alert("Düzenekteki kutular yere temas etmiyor veya kutu sayısı hatalı.");
+    }
+  });
+}
+
+
+
+  setInterval(() => {
+    Object.values(containers).forEach(applyGravity);
+  }, 1);
+</script>
+
+</body>
+</html>
