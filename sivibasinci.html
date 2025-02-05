@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pascal Basıncı Simülasyonu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .container {
+            display: inline-block;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            padding: 10px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            display: inline-block;
+            background-color: #f0f8ff;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 80%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pascal Basıncı Simülasyonu</h1>
+    <div class="container">
+        <button id="a">Piston</button>
+        <br>
+        <div class="result" id="result">Uygulanan Kuvvet: 0 N<br>Kaldırma Kuvveti: 0.00 N</div>
+    </div>
+    <canvas id="simulationCanvas" width="960" height="640"></canvas>
+    <script>
+        let force = 0;
+        let interval;
+    
+        // Gerçek piston çapları (metre cinsinden)
+        const d1 = 0.1; // Küçük piston çapı
+        const d2 = 0.4; // Büyük piston çapı
+    
+        // Alan hesaplamaları
+        const area1 = Math.PI * Math.pow(d1 / 2, 2);
+        const area2 = Math.PI * Math.pow(d2 / 2, 2);
+    
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const carImage = new Image();
+        carImage.src = 'indir.png';
+    
+        carImage.onload = function() {
+            drawSimulation();
+        };
+    
+        carImage.onerror = function() {
+            console.error('Resim yüklenemedi. Lütfen dosya yolunu kontrol edin.');
+        };
+    
+        function startSimulation() {
+            force = 0;
+            const button = document.getElementById('a');
+            button.addEventListener('mousedown', increaseForce);
+            button.addEventListener('mouseup', stopIncreasingForce);
+            button.addEventListener('mouseleave', stopIncreasingForce);
+            drawSimulation();
+        }
+    
+        function increaseForce() {
+            interval = setInterval(() => {
+                force += 1; // Kuvvet artışı daha gerçekçi
+                drawSimulation();
+                const force2 = (force / area1) * area2;
+                document.getElementById('result').innerText = `Uygulanan Kuvvet: ${force} N \n Kaldırma Kuvveti: ${force2.toFixed(2)} N`;
+            }, 100);
+        }
+    
+        function stopIncreasingForce() {
+            clearInterval(interval);
+        }
+    
+        function drawSimulation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let extra = 75;
+
+            // Hidrolik sıvı
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(152, 400, 656, 160);
+    
+            // Küçük piston dış çeperi
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(152, 240, 96, 160);
+    
+            // Küçük piston (Aşağı hareket eden)
+            ctx.fillStyle = 'gray';
+            ctx.fillRect(160, 288 + (force * extra) / 200, 80, 80);
+    
+            // Büyük piston dış çeperi
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(632, 190, 176, 300);
+    
+            // Büyük piston (Araç kaldırma)
+            ctx.fillStyle = 'gray';
+            ctx.fillRect(640, 192 - (force * extra) / 50, 160, 80);
+    
+            // Araç resmi çizimi
+            if (carImage.complete && carImage.naturalWidth > 0) {
+                ctx.drawImage(carImage, 590, 72 - (force * extra) / 50, 300, 150);
+            }
+    
+            // Etiketler
+            ctx.fillStyle = 'black';
+            ctx.font = '24px Arial';
+            ctx.fillText(`Küçük piston kuvveti: ${force} N`, 16, 32);
+            ctx.fillText(`Büyük piston kuvveti: ${(force / area1 * area2).toFixed(2)} N`, 480, 32);
+        }
+    
+        startSimulation();
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torricelli Deneyi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #e8e8e8;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="experimentCanvas" width="400" height="600"></canvas>
+    <div class="controls">
+        <label for="fluid">Sıvı:</label>
+        <select id="fluid">
+            <option value="mercury">Cıva</option>
+            <option value="water">Su</option>
+            <option value="alcohol">Alkol</option>
+        </select>
+
+        <label for="height" style="margin-left: 20px;">Yükseklik (m):</label>
+        <input type="range" id="height" min="0" max="10000" step="100" value="0">
+        <span id="heightValue">0</span> m
+
+        <label for="temperature" style="margin-left: 20px;">Sıcaklık (°C):</label>
+        <input type="range" id="temperature" min="-30" max="50" step="1" value="20">
+        <span id="temperatureValue">20</span> °C
+    </div>
+    <div class="output">
+        <p id="outputText">Cıva Yüksekliği: 0 cm</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('experimentCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const fluidSelect = document.getElementById('fluid');
+        const heightSlider = document.getElementById('height');
+        const heightValue = document.getElementById('heightValue');
+        const tempSlider = document.getElementById('temperature');
+        const tempValue = document.getElementById('temperatureValue');
+        const outputText = document.getElementById('outputText');
+
+        // Sabitler
+        const P0 = 101325; // Deniz seviyesindeki atmosfer basıncı (Pa)
+        const g = 9.81; // Yerçekimi ivmesi (m/s²)
+        const H = 8000; // Atmosferin ölçek yüksekliği (m)
+
+        // Sıvıların yoğunlukları (kg/m³) ve genleşme katsayıları (1/°C)
+        const fluids = {
+            mercury: { density: 13600, expansion: 0.00018 },
+            water: { density: 1000, expansion: 0.00021 },
+            alcohol: { density: 800, expansion: 0.00030 }
+        };
+
+        let height = 0; // Yükseklik (m)
+        let temperature = 20; // Sıcaklık (°C)
+        let selectedFluid = 'mercury'; // Varsayılan sıvı
+
+        // Deneyi çiz
+        function drawExperiment(heightRatio) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Tüp
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(150, 50, 100, 500);
+
+            // Kaptaki sıvı
+            ctx.fillStyle = '#808080'; // Varsayılan cıva rengi
+            if (selectedFluid === 'water') ctx.fillStyle = '#F5F5F5';
+            if (selectedFluid === 'alcohol') ctx.fillStyle = '#DCDCDC';
+            ctx.fillRect(125, 550, 150, 50);
+
+            // Tüpteki sıvı
+            const fluidHeight = heightRatio * 500; // Tüp yüksekliği (canvas birimi)
+            ctx.fillRect(150, 550 - fluidHeight, 100, fluidHeight);
+
+            // Tüp Çerçevesi
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(150, 50, 100, 500);
+        }
+
+        // Basınç ve sıvı yüksekliği hesaplama
+        function calculateFluidHeight() {
+            let density = fluids[selectedFluid].density;
+            const expansion = fluids[selectedFluid].expansion;
+            
+            // Sıcaklığa bağlı yoğunluk değişimi
+            density *= (1 - expansion * (temperature - 20));
+            
+            const pressure = P0 * Math.exp(-height / H); // Yükseklikle azalan atmosfer basıncı
+            const fluidHeight = pressure / (density * g); // Yükseklik (m)
+            return fluidHeight * 100; // cm cinsinden
+        }
+
+        // Deney sahnesini güncelle
+        function updateExperiment() {
+            height = parseInt(heightSlider.value);
+            temperature = parseInt(tempSlider.value);
+            selectedFluid = fluidSelect.value;
+
+            // Güncel değerleri ekrana yaz
+            heightValue.textContent = height;
+            tempValue.textContent = temperature;
+
+            // Sıvı yüksekliğini hesapla ve çiz
+            const fluidHeight = calculateFluidHeight();
+            const heightRatio = fluidHeight / 76; // 760 mmHg için 76 cm referans alınır
+            outputText.textContent = `${selectedFluid === 'mercury' ? 'Cıva' : selectedFluid === 'water' ? 'Su' : 'Alkol'} Yüksekliği: ${fluidHeight.toFixed(2)} cm`;
+
+            drawExperiment(heightRatio);
+        }
+
+        // Başlangıç durumu
+        updateExperiment();
+
+        // Kontrolleri dinle
+        heightSlider.addEventListener('input', updateExperiment);
+        tempSlider.addEventListener('input', updateExperiment);
+        fluidSelect.addEventListener('change', updateExperiment);
+    </script>
+</body>
+</html>
