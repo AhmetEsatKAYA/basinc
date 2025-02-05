@@ -82,7 +82,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Tüp
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#999';
             ctx.fillRect(150, 50, 100, 500);
 
             // Kaptaki sıvı
@@ -92,8 +92,12 @@
             ctx.fillRect(125, 550, 150, 50);
 
             // Tüpteki sıvı
-            const fluidHeight = heightRatio * 500; // Tüp yüksekliği (canvas birimi)
-            ctx.fillRect(150, 550 - fluidHeight, 100, fluidHeight);
+            const tubeHeight = 500; // Tüpün toplam yüksekliği (100 cm = 500px ölçeklenmiş)
+            const maxFluidHeight = 380; // 76 cm = 380px olacak şekilde ölçeklendirme
+            const fluidHeight = Math.min(heightRatio * maxFluidHeight, maxFluidHeight); 
+            const emptySpace = tubeHeight - fluidHeight;
+
+            ctx.fillRect(150, 50 + emptySpace, 100, fluidHeight);
 
             // Tüp Çerçevesi
             ctx.strokeStyle = '#333';
