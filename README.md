@@ -2,7 +2,7 @@
 
 Bu oyunda katı, sızı, gaz basıncı konusunu daha iyi öğrenebilmek için katkı sağlar ve test ile öğrenilenleri pekiştirir.
 
-#Kaynaklar:
+# Kaynaklar:
 
 OpenAI ChatGPT
 
