@@ -120,7 +120,6 @@
   function addBox(containerId) {
     const container = containers[containerId];
     if (isGameOver(container)) {
-      alert(`${containerId} düzenekte daha fazla kutu ekleyemezsiniz.`);
       return;
     }
 
@@ -274,7 +273,6 @@
 
     // Yere temas eden kutuları kontrol et ve say
     const boxesOnGround = container.boxes.filter(box => parseFloat(box.element.style.bottom) === 0).length;
-     alert(boxesOnGround)
     // Yere temas eden kutuların sayısı doğru mu kontrol et
     if (boxesOnGround !== container.boxes.length) {
       correct = false; // Yere temas etmeyen kutular var

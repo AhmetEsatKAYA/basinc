@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görselli Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .question {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .optik-form {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Fen Testi</h2>
+        <div id="quiz"></div>
+        <div class="controls">
+            <button onclick="prevQuestion()">Önceki</button>
+            <button onclick="nextQuestion()">Sonraki</button>
+        </div>
+        <button onclick="checkAnswers()">Bitir</button>
+        <h3 id="result"></h3>
+    </div>
+
+    <script src="test.js"></script>
+
+    <script>
+
+        const quizDiv = document.getElementById("quiz");
+        let currentQuestionIndex = 0;
+
+        questions.forEach((q, index) => {
+            const questionDiv = document.createElement("div");
+            questionDiv.classList.add("question");
+            if (index === 0) questionDiv.classList.add("active");
+
+            
+            const soruno = document.createElement("h2");
+            soruno.innerText = (`Soru ${index + 1}`);
+            questionDiv.appendChild(soruno);
+            
+
+            
+            const img = document.createElement("img");
+            img.src = q.image;
+            questionDiv.appendChild(img);
+            
+            q.answers.forEach(answer => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = "question" + index;
+                input.value = answer;
+                label.appendChild(input);
+                label.append(answer);
+                questionDiv.appendChild(label);
+            });
+            
+            quizDiv.appendChild(questionDiv);
+        });
+
+        function showQuestion(index) {
+            document.querySelectorAll(".question").forEach((q, i) => {
+                q.classList.toggle("active", i === index);
+            });
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name='question${index}']:checked`);
+                if (selected && selected.value === q.correct) {
+                    score++;
+                }
+            });
+            document.getElementById("result").innerText = `Skorunuz: ${score} / ${questions.length}`;
+        }
+    </script>
+</body>
+</html>
