@@ -44,6 +44,7 @@
 <body>
     <div class="container">
         <h2>Fen Testi</h2>
+        <embed src="basınç.pdf" type="application/pdf" width="100%" height="600px" />
         <div id="quiz"></div>
         <div class="controls">
             <button onclick="prevQuestion()">Önceki</button>
@@ -71,10 +72,7 @@
             questionDiv.appendChild(soruno);
             
 
-            
-            const img = document.createElement("img");
-            img.src = q.image;
-            questionDiv.appendChild(img);
+
             
             q.answers.forEach(answer => {
                 const label = document.createElement("label");
@@ -118,7 +116,9 @@
                     score++;
                 }
             });
-            document.getElementById("result").innerText = `Skorunuz: ${score} / ${questions.length}`;
+            document.getElementById("result").innerHTML = `Skorunuz: ${score} / ${questions.length}`;
+            
+            document.getElementById("result").innerHTML += "<br> Cevaplar: 1D 2A 3B 4D 5D 6B 7B 8B 9D 10C 11B 12C 13C 14C 15C 16A 17D 18A 19A 20D 21D 22A 23D 24D 25B 26A 27A 28C 29D 30A ";
         }
     </script>
 </body>
