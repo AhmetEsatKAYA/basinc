@@ -6,6 +6,6 @@ Bu oyunda katı, sıvı, gaz basıncı konusunu daha iyi öğrenebilmek için ka
 
 ChatGPT
 
-# Hazırlayanlar
+# Hazırlayan
 
 Ahmet Esat KAYA
